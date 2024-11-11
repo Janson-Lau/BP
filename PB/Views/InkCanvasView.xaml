@@ -1,0 +1,21 @@
+﻿<Window x:Class="PB.Views.InkCanvasView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PB.Views"
+        mc:Ignorable="d"
+        Title="InkCanvasView" Height="450" Width="800">
+    <DockPanel>
+        <InkCanvas Name="inkCanvas" DockPanel.Dock="Bottom" />
+        <Label
+         Width="114"
+         Height="30"
+         Content="Select Tool"
+         DockPanel.Dock="Left" />
+        <ComboBox
+         Name="combMode"
+         Height="30"
+         DockPanel.Dock="Right" />
+    </DockPanel>
+</Window>
