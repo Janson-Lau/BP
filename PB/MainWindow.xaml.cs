@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PB.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,7 +35,8 @@ namespace PB
 
         private void Btn_Identify_Click(object sender, RoutedEventArgs e)
         {
-            ConvertToMatrix();
+            //ConvertToMatrix();
+            Compute();
         }
 
         private int[,] matrix = new int[28, 28];
@@ -64,19 +66,28 @@ namespace PB
                         matrix[y, x] = 1;
                     }
                 }
-            }           
+            }
 
             string str = string.Empty;
             // 打印矩阵  
             for (int i = 0; i < 28; i++)
             {
                 for (int j = 0; j < 28; j++)
-                {                   
+                {
                     str += (matrix[i, j] + "   ");
-                }               
-                str += ( "\r\n");
+                }
+                str += ("\r\n");
             }
             MessageBox.Show(str);
+        }
+
+        public void Compute()
+        {
+            double[,] x = new double[,] { { 1 }, { 2 } };
+            int inputCount = x.GetLength(0);
+            PBModel pBModel = new PBModel(x, 2, 2);
+            pBModel.ComputeU();
+            pBModel.ComputeY();
         }
     }
 }

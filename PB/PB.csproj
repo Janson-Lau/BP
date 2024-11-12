@@ -55,6 +55,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Models\PBModel.cs" />
     <Compile Include="PBMath\PBMath.cs" />
     <Compile Include="Views\InkCanvasView.xaml.cs">
       <DependentUpon>InkCanvasView.xaml</DependentUpon>
