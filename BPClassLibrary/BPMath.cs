@@ -1,9 +1,6 @@
-﻿using System;
-using System.Windows.Media;
-
-namespace PB.PBMath
+﻿namespace BPClassLibrary
 {
-    public class PBMath
+    public static class BPMath
     {
         public static double Sigmoid(double x)
         {
@@ -23,17 +20,17 @@ namespace PB.PBMath
             }
         }
 
-        public double Tanh(double x)
+        public static double Tanh(double x)
         {
             return (Math.Exp(x) - Math.Exp(-x)) / (Math.Exp(x) + Math.Exp(-x));
         }
 
-        public double ReLU(double x)
+        public static double ReLU(double x)
         {
             return Math.Max(0, x);
         }
 
-        public double PureLin(double x)
+        public static double PureLin(double x)
         {
             return x;
         }
