@@ -122,5 +122,37 @@
                 }
             }
         }
+
+        public static double[] ToArray(this double[,] matrix)
+        {
+            int rows = matrix.GetLength(0);
+            int cols = matrix.GetLength(1);
+            List<double> result = new List<double>();
+            // 进行矩阵相加
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    result.Add(matrix[i, j]);
+                }
+            }
+            return result.ToArray();
+        }
+
+        public static int[] ToArray(this int[,] matrix)
+        {
+            int rows = matrix.GetLength(0);
+            int cols = matrix.GetLength(1);
+            List<int> result = new List<int>();
+            // 进行矩阵相加
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    result.Add(matrix[i, j]);
+                }
+            }
+            return result.ToArray();
+        }
     }
 }

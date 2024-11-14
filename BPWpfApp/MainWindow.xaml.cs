@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using BPClassLibrary;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -11,13 +8,14 @@ using System.Windows.Ink;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace PB
+namespace BPWpfApp
 {
     /// <summary>
-    /// MainWindow.xaml 的交互逻辑
+    /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
@@ -30,12 +28,26 @@ namespace PB
         {
             // 清除 InkCanvas 上的所有笔迹  
             inkCanvas.Strokes.Clear();
+            tb_Input.Text = "";
         }
 
         private void Btn_Identify_Click(object sender, RoutedEventArgs e)
         {
-            //ConvertToMatrix();
-            //Compute();
+            ConvertToMatrix();
+            var input = matrix.ToArray().Select(e => (double)e).ToArray();
+            var targetOutput = ToArray(1);
+            BPFactory bPFactory = new BPFactory(input, 16, 2, 10, targetOutput);
+
+            string log = bPFactory.Learn();
+            log += bPFactory.Work();
+
+            for (int i = 0; i < bPFactory.OutputNodes.Count; i++)
+            {
+                var node = bPFactory.OutputNodes[i];
+                string s = $"{i}:{node.Value}\r\n";
+                log += s;
+            }
+            tb_Output.Text = log;
         }
 
         private int[,] matrix = new int[28, 28];
@@ -73,20 +85,24 @@ namespace PB
             {
                 for (int j = 0; j < 28; j++)
                 {
-                    str += (matrix[i, j] + "   ");
+                    str += (matrix[i, j] + "  ");
                 }
                 str += ("\r\n");
             }
-            MessageBox.Show(str);
+            tb_Input.Text = str;
+            //MessageBox.Show(str);
         }
 
-        //public void Compute()
-        //{
-        //    double[,] x = new double[,] { { 1 }, { 2 } };
-        //    int inputCount = x.GetLength(0);
-        //    PBModel pBModel = new PBModel(x, 2, 2);
-        //    pBModel.ComputeU();
-        //    pBModel.ComputeY();
-        //}
+        /// <summary>
+        /// 概率
+        /// </summary>
+        /// <param name="n">0-9</param>
+        /// <returns></returns>
+        public double[] ToArray(int n)
+        {
+            double[] array = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+            array[n] = 1;
+            return array;
+        }
     }
 }

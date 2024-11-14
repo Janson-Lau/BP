@@ -8,14 +8,14 @@ using System.Xml.Linq;
 
 namespace BPClassLibrary
 {
-    public class Link
-    {
-        public Node PreviousNode { get; set; }
+    //public class Link
+    //{
+    //    public Node PreviousNode { get; set; }
 
-        public Node NextNode { get; set; }
+    //    public Node NextNode { get; set; }
 
-        public double Weight { get; set; }
-    }
+    //    public double Weight { get; set; }
+    //}
 
     public class Node
     {
@@ -42,9 +42,9 @@ namespace BPClassLibrary
 
         public double Loss => TargetValue - Value;
 
-        public Func<double, double> Function;
+        //public Func<double, double> Function;
 
-        public Activations Activations { get; set; } = Activations.None;
+        public Activations Activations { get; set; } = Activations.Sigmoid;
 
         public void ForwardPropagation()
         {
@@ -53,7 +53,6 @@ namespace BPClassLibrary
                 double x = 0;
                 foreach (Node node in PreviousNodes)
                 {
-                    //x += node.Value * node.NextWeights[Index];
                     x += node.Value * PreviousWeights[node.Index];
                 }
                 x += Theta;
@@ -89,14 +88,16 @@ namespace BPClassLibrary
                 {
                     case Activations.None:
 
-                        // V11*X1+V21*X2=Y1
-                        // (Y-Y1)^2
-                        // 2*(Y-Y1)*X1
+                        // Y1 = V11*X1+V21*X2
+                        // δ = (Y-Y1)^2
+                        // əδ/əY1 = 2*(Y-Y1)*(-1)
+                        // əV11/əY1 = X1
+                        // əδ/əV11 = 2*(Y-Y1)*(-1)*X1
+                        // V11 = V11-η*əδ/əV11
                         foreach (Node node in PreviousNodes)
                         {
-                            double dw = 2 * (TargetValue - Value) * node.Value;
-                            //node.NextWeights[Index] = node.NextWeights[Index] - node.Value * dw;
-                            PreviousWeights[node.Index] = PreviousWeights[node.Index] - node.Value * Rate * dw;
+                            double dw = 2 * (TargetValue - Value) * (-1) * node.Value;
+                            PreviousWeights[node.Index] = PreviousWeights[node.Index] - Rate * dw;
                             totalWeight += PreviousWeights[node.Index];
                         }
                         foreach (Node node in PreviousNodes)
@@ -109,11 +110,16 @@ namespace BPClassLibrary
                         break;
 
                     case Activations.Sigmoid:
+                        // Y1 = σ(V11*X1+V21*X2+θ)
+                        // δ = (Y-Y1)^2
+                        // əδ/əY1 = 2*(Y-Y1)*(-1)
+                        // əV11/əY1 = Y1*(1-Y1)*X1
+                        // əδ/əV11 = 2*(Y-Y1)*(-1)*Y1*(1-Y1)*X1
+                        // V11 = V11-η*əδ/əV11
                         foreach (Node node in PreviousNodes)
                         {
-                            double dw = 2 * (TargetValue - Value) * Value * (1 - Value) * node.Value;
-                            //node.NextWeights[Index] = node.NextWeights[Index] - node.Value * dw;
-                            PreviousWeights[node.Index] = PreviousWeights[node.Index] - node.Value * Rate * dw;
+                            double dw = 2 * (TargetValue - Value) * (-1) * Value * (1 - Value) * node.Value;
+                            PreviousWeights[node.Index] = PreviousWeights[node.Index] - Rate * dw;
                             totalWeight += PreviousWeights[node.Index];
                         }
                         foreach (Node node in PreviousNodes)
@@ -140,7 +146,7 @@ namespace BPClassLibrary
 
     public class BPFactory
     {
-        public int MaxCount { get; set; } = 100;
+        public int MaxCount { get; set; } = 1000;
 
         public double Tolerence { get; set; } = 0.1;
 
@@ -175,7 +181,7 @@ namespace BPClassLibrary
                     node.PreviousWeights = new List<double>();
                     for (int k = 0; k < previousNodes.Count; k++)
                     {
-                        node.PreviousWeights.Add(k + 1);
+                        node.PreviousWeights.Add((k + 1) * 0.1);
                     }
                     Console.WriteLine($"Node{i}:{node.Value}");
                     column.Add(node);
@@ -193,7 +199,7 @@ namespace BPClassLibrary
                 node.PreviousWeights = new List<double>();
                 for (int k = 0; k < previousNodes.Count; k++)
                 {
-                    node.PreviousWeights.Add(k + 1);
+                    node.PreviousWeights.Add((k + 1) * 0.1);
                 }
                 if (targetValues.Length > i)
                 {
@@ -204,46 +210,61 @@ namespace BPClassLibrary
             }
         }
 
-        public void ForwardPropagation()
+        public string ForwardPropagation()
         {
-            //InputNodes.ForEach(node => node.ForwardPropagation());
+            string log = string.Empty;
 
             NodeListList.ForEach(list => list.ForEach(node => node.ForwardPropagation()));
 
             OutputNodes.ForEach(node => node.ForwardPropagation());
+
+            for (int i = 0; i < OutputNodes.Count; i++)
+            {
+                Console.WriteLine($"OutputNode{i}:{OutputNodes[i].Value}");
+                log += $"OutputNode{i}:{OutputNodes[i].Value}\r\n";
+            }
+            return log;
         }
 
         public void BackwardPropagation()
         {
+            string log = string.Empty;
+
             OutputNodes.ForEach(node => node.BackwardPropagation());
 
             NodeListList.ForEach(list => list.ForEach(node => node.BackwardPropagation()));
         }
 
-        public void Learn()
+        public string Learn()
         {
+            string log = string.Empty;
             int count = 0;
             while (true)
             {
-                ForwardPropagation();
+                log += ForwardPropagation();
                 BackwardPropagation();
                 bool flag = OutputNodes.All(e => Math.Abs(e.Loss) <= Tolerence);
                 count++;
                 if (count > MaxCount || flag)
                 {
-                    Console.WriteLine($"count:{count}");
+                    Console.WriteLine($"count of learn:{count}");
+                    log += $"count of learn:{count}\r\n";
                     break;
                 }
             }
+            return log;
         }
 
-        public void Work()
+        public string Work()
         {
-            ForwardPropagation();
+            string log = string.Empty;
+            log += ForwardPropagation();
             for (int i = 0; i < OutputNodes.Count; i++)
             {
                 Console.WriteLine($"OutputNode{i}:{OutputNodes[i].Value}");
+                log += $"OutputNode{i}:{OutputNodes[i].Value}\r\n";
             }
+            return log;
         }
     }
 }
