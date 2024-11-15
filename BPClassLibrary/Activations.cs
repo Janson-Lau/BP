@@ -8,7 +8,7 @@ namespace BPClassLibrary
 {
     public enum Activations
     {
-        None,
+        PureLin,
         Sigmoid,
         Tanh,
         ReLU

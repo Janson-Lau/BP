@@ -8,44 +8,60 @@ using System.Xml.Linq;
 
 namespace BPClassLibrary
 {
-    //public class Link
-    //{
-    //    public Node PreviousNode { get; set; }
-
-    //    public Node NextNode { get; set; }
-
-    //    public double Weight { get; set; }
-    //}
-
     public class Node
     {
+        /// <summary>
+        /// 节点索引值
+        /// </summary>
         public int Index { get; set; }
 
+        /// <summary>
+        /// 前节点
+        /// </summary>
         public List<Node> PreviousNodes { get; set; }
 
+        /// <summary>
+        /// 前权重
+        /// </summary>
         public List<double> PreviousWeights { get; set; }
 
         //public List<Node> NextNodes { get; set; }
 
         //public List<double> NextWeights { get; set; }
 
+        /// <summary>
+        /// 学习率
+        /// </summary>
         public double Rate { get; set; } = 0.1;
 
         /// <summary>
         /// 阈值
         /// </summary>
-        public double Theta { get; set; }
+        public double Theta { get; set; } = 0.1;
 
+        /// <summary>
+        /// 节点值
+        /// </summary>
         public double Value { get; set; }
 
+        /// <summary>
+        /// 目标节点值
+        /// </summary>
         public double TargetValue { get; set; }
 
+        /// <summary>
+        /// 误差值
+        /// </summary>
         public double Loss => TargetValue - Value;
 
-        //public Func<double, double> Function;
-
+        /// <summary>
+        /// 激活函数
+        /// </summary>
         public Activations Activations { get; set; } = Activations.Sigmoid;
 
+        /// <summary>
+        /// 前向传播
+        /// </summary>
         public void ForwardPropagation()
         {
             if (PreviousNodes?.Count > 0)
@@ -70,7 +86,7 @@ namespace BPClassLibrary
                         x = BPMath.ReLU(x);
                         break;
 
-                    case Activations.None:
+                    case Activations.PureLin:
                     default:
                         break;
                 }
@@ -78,20 +94,27 @@ namespace BPClassLibrary
             }
         }
 
+        /// <summary>
+        /// 反向传播
+        /// </summary>
         public void BackwardPropagation()
         {
             if (PreviousNodes?.Count > 0)
             {
                 double totalWeight = 0;
+                double dθ = 0;
                 double loss = TargetValue - Value;
+
+                // 权重、阈值反向传播修正
                 switch (Activations)
                 {
-                    case Activations.None:
+                    case Activations.PureLin:
+                        //PureLin(X)'=(X)'=1
 
-                        // Y1 = V11*X1+V21*X2
+                        // Y1 = PureLin(V11*X1+V21*X2+θ)
                         // δ = (Y-Y1)^2
                         // əδ/əY1 = 2*(Y-Y1)*(-1)
-                        // əV11/əY1 = X1
+                        // əY1/əV11 = X1
                         // əδ/əV11 = 2*(Y-Y1)*(-1)*X1
                         // V11 = V11-η*əδ/əV11
                         foreach (Node node in PreviousNodes)
@@ -100,20 +123,24 @@ namespace BPClassLibrary
                             PreviousWeights[node.Index] = PreviousWeights[node.Index] - Rate * dw;
                             totalWeight += PreviousWeights[node.Index];
                         }
-                        foreach (Node node in PreviousNodes)
-                        {
-                            if (node?.PreviousNodes?.Count > 0)
-                            {
-                                node.Value = node.Value + (PreviousWeights[node.Index] / totalWeight) * loss;
-                            }
-                        }
+
+                        // Y1 = PureLin(V11*X1+V21*X2+θ)
+                        // δ = (Y-Y1)^2
+                        // əδ/əY1 = 2*(Y-Y1)*(-1)
+                        // əY1/əθ = 1
+                        // əδ/əθ = 2*(Y-Y1)*(-1)*1
+                        // θ = θ-η*əδ/əθ
+                        dθ = 2 * (TargetValue - Value) * (-1) * 1;
+                        Theta = Theta - Rate * dθ;
                         break;
 
                     case Activations.Sigmoid:
-                        // Y1 = σ(V11*X1+V21*X2+θ)
+                        // Sigmoid(X)'=(1/(1+e^-x))'=[1/(1+e^-x)]*[1-1/(1+e^-x)]
+
+                        // Y1 = Sigmoid(V11*X1+V21*X2+θ)
                         // δ = (Y-Y1)^2
                         // əδ/əY1 = 2*(Y-Y1)*(-1)
-                        // əV11/əY1 = Y1*(1-Y1)*X1
+                        // əY1/əV11 = Y1*(1-Y1)*X1
                         // əδ/əV11 = 2*(Y-Y1)*(-1)*Y1*(1-Y1)*X1
                         // V11 = V11-η*əδ/əV11
                         foreach (Node node in PreviousNodes)
@@ -122,23 +149,85 @@ namespace BPClassLibrary
                             PreviousWeights[node.Index] = PreviousWeights[node.Index] - Rate * dw;
                             totalWeight += PreviousWeights[node.Index];
                         }
-                        foreach (Node node in PreviousNodes)
-                        {
-                            if (node?.PreviousNodes?.Count > 0)
-                            {
-                                node.Value = node.Value + (PreviousWeights[node.Index] / totalWeight) * loss;
-                            }
-                        }
+
+                        // Y1 = Sigmoid(V11*X1+V21*X2+θ)
+                        // δ = (Y-Y1)^2
+                        // əδ/əY1 = 2*(Y-Y1)*(-1)
+                        // əY1/əθ = Y1*(1-Y1)
+                        // əδ/əθ = 2*(Y-Y1)*(-1)*Y1*(1-Y1)
+                        // θ = θ-η*əδ/əθ
+                        dθ = 2 * (TargetValue - Value) * (-1) * Value * (1 - Value);
+                        Theta = Theta - Rate * dθ;
                         break;
 
                     case Activations.Tanh:
+                        // Y1 = Tanh(V11*X1+V21*X2+θ)
+                        // δ = (Y-Y1)^2
+                        // əδ/əY1 = 2*(Y-Y1)*(-1)
+                        // əY1/əV11 = (1-Y1^2)*X1
+                        // əδ/əV11 = 2*(Y-Y1)*(-1)*(1-Y1^2)*X1
+                        // V11 = V11-η*əδ/əV11
+                        foreach (Node node in PreviousNodes)
+                        {
+                            double dw = 2 * (TargetValue - Value) * (-1) * (1 - Value * Value) * node.Value;
+                            PreviousWeights[node.Index] = PreviousWeights[node.Index] - Rate * dw;
+                            totalWeight += PreviousWeights[node.Index];
+                        }
+
+                        // Y1 = Tanh(V11*X1+V21*X2+θ)
+                        // δ = (Y-Y1)^2
+                        // əδ/əY1 = 2*(Y-Y1)*(-1)
+                        // əY1/əθ = (1-Y1^2)
+                        // əδ/əθ = 2*(Y-Y1)*(-1)*(1-Y1^2)
+                        // θ = θ-η*əδ/əθ
+                        dθ = 2 * (TargetValue - Value) * (-1) * (1 - Value * Value);
+                        Theta = Theta - Rate * dθ;
                         break;
 
                     case Activations.ReLU:
+                        // ReLU(X)' = Max(0, x)'= 0(X<=0), 1(X>0)
+
+                        // Y1 = ReLU(V11*X1+V21*X2+θ)
+                        // δ = (Y-Y1)^2
+                        // əδ/əY1 = 2*(Y-Y1)*(-1)
+                        // əY1/əV11 = 0(Y1<=0), X1(Y1>0)
+                        // əδ/əV11 = 0(Y1<=0), 2*(Y-Y1)*(-1)*X1(Y1>0)
+                        // V11 = V11-η*əδ/əV11
+                        foreach (Node node in PreviousNodes)
+                        {
+                            double dw = 0;
+                            if (Value > 0)
+                            {
+                                dw = 2 * (TargetValue - Value) * (-1) * node.Value;
+                            }
+                            PreviousWeights[node.Index] = PreviousWeights[node.Index] - Rate * dw;
+                            totalWeight += PreviousWeights[node.Index];
+                        }
+
+                        // Y1 = ReLU(V11*X1+V21*X2+θ)
+                        // δ = (Y-Y1)^2
+                        // əδ/əY1 = 2*(Y-Y1)*(-1)
+                        // əY1/əθ = 0(Y1<=0), 1(Y1>0)
+                        // əδ/əθ = 0(Y1<=0), 2*(Y-Y1)*(-1)*1(Y1>0)
+                        // θ = θ-η*əδ/əθ
+                        if (Value > 0)
+                        {
+                            dθ = 2 * (TargetValue - Value) * (-1);
+                            Theta = Theta - Rate * dθ;
+                        }
                         break;
 
                     default:
                         break;
+                }
+
+                // 误差反向传播分配
+                foreach (Node node in PreviousNodes)
+                {
+                    if (node?.PreviousNodes?.Count > 0)
+                    {
+                        node.Value = node.Value + (PreviousWeights[node.Index] / totalWeight) * loss;
+                    }
                 }
             }
         }
@@ -146,23 +235,41 @@ namespace BPClassLibrary
 
     public class BPFactory
     {
-        public int MaxCount { get; set; } = 1000;
+        /// <summary>
+        /// 最大迭代次数
+        /// </summary>
+        public int MaxCount { get; set; } = 10000;
 
+        /// <summary>
+        /// 目标容差
+        /// </summary>
         public double Tolerence { get; set; } = 0.1;
 
+        /// <summary>
+        /// 输入节点
+        /// </summary>
         public List<Node> InputNodes { get; set; }
 
+        /// <summary>
+        /// 隐藏层神经元
+        /// </summary>
         public List<List<Node>> NodeListList { get; set; }
 
+        /// <summary>
+        /// 输出节点
+        /// </summary>
         public List<Node> OutputNodes { get; set; }
 
-        public BPFactory(double[] inputs, int rows, int cols, int outputsCount, params double[] targetValues)
+        public BPFactory(int inputsCount, double[] inputs, int rows, int cols, int outputsCount, params double[] targetValues)
         {
             InputNodes = new List<Node>();
-            for (int i = 0; i < inputs.Length; i++)
+            for (int i = 0; i < inputsCount; i++)
             {
                 Node node = new Node();
-                node.Value = inputs[i];
+                if (inputs?.Length > i)
+                {
+                    node.Value = inputs[i];
+                }
                 node.Index = i;
                 InputNodes.Add(node);
                 Console.WriteLine($"InputNode{i}:{node.Value}");
@@ -201,12 +308,36 @@ namespace BPClassLibrary
                 {
                     node.PreviousWeights.Add((k + 1) * 0.1);
                 }
-                if (targetValues.Length > i)
+                if (targetValues?.Length > i)
                 {
                     node.TargetValue = targetValues[i];
                 }
-                Console.WriteLine($"OutputNode{i}:{node.TargetValue}");
+                Console.WriteLine($"Output{i}:{node.TargetValue}");
                 OutputNodes.Add(node);
+            }
+        }
+
+        public void SetInputNodes(double[] inputs)
+        {
+            for (int i = 0; i < InputNodes.Count; i++)
+            {
+                Node node = InputNodes[i];
+                if (inputs?.Length > i)
+                {
+                    node.Value = inputs[i];
+                }
+            }
+        }
+
+        public void SetOutputNodes(double[] targetValues)
+        {
+            for (int i = 0; i < OutputNodes.Count; i++)
+            {
+                Node node = OutputNodes[i];
+                if (targetValues?.Length > i)
+                {
+                    node.TargetValue = targetValues[i];
+                }
             }
         }
 
@@ -220,9 +351,10 @@ namespace BPClassLibrary
 
             for (int i = 0; i < OutputNodes.Count; i++)
             {
-                Console.WriteLine($"OutputNode{i}:{OutputNodes[i].Value}");
-                log += $"OutputNode{i}:{OutputNodes[i].Value}\r\n";
+                //Console.WriteLine($"Output{i}:{OutputNodes[i].Value}");
+                log += $"{i}: {OutputNodes[i].Value}\r\n";
             }
+            log += $"\r\n";
             return log;
         }
 
@@ -247,8 +379,8 @@ namespace BPClassLibrary
                 count++;
                 if (count > MaxCount || flag)
                 {
-                    Console.WriteLine($"count of learn:{count}");
-                    log += $"count of learn:{count}\r\n";
+                    //Console.WriteLine($"Training times:{count}");
+                    log += $"Training times:{count}\r\n";
                     break;
                 }
             }
@@ -259,11 +391,11 @@ namespace BPClassLibrary
         {
             string log = string.Empty;
             log += ForwardPropagation();
-            for (int i = 0; i < OutputNodes.Count; i++)
-            {
-                Console.WriteLine($"OutputNode{i}:{OutputNodes[i].Value}");
-                log += $"OutputNode{i}:{OutputNodes[i].Value}\r\n";
-            }
+            //for (int i = 0; i < OutputNodes.Count; i++)
+            //{
+            //    Console.WriteLine($"Output{i}:{OutputNodes[i].Value}");
+            //    log += $"Output{i}:{OutputNodes[i].Value}\r\n";
+            //}
             return log;
         }
     }
