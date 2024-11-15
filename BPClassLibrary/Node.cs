@@ -238,12 +238,12 @@ namespace BPClassLibrary
         /// <summary>
         /// 最大迭代次数
         /// </summary>
-        public int MaxCount { get; set; } = 10000;
+        public int MaxCount { get; set; } = 500;
 
         /// <summary>
         /// 目标容差
         /// </summary>
-        public double Tolerence { get; set; } = 0.1;
+        public double Tolerence { get; set; } = 0.2;
 
         /// <summary>
         /// 输入节点
@@ -262,6 +262,8 @@ namespace BPClassLibrary
 
         public BPFactory(int inputsCount, double[] inputs, int rows, int cols, int outputsCount, params double[] targetValues)
         {
+            Random random = new Random();
+
             InputNodes = new List<Node>();
             for (int i = 0; i < inputsCount; i++)
             {
@@ -288,7 +290,9 @@ namespace BPClassLibrary
                     node.PreviousWeights = new List<double>();
                     for (int k = 0; k < previousNodes.Count; k++)
                     {
-                        node.PreviousWeights.Add((k + 1) * 0.1);
+                        var r = random.NextDouble();
+                        var n = (2 * r - 1) / Math.Sqrt(previousNodes.Count);                      
+                        node.PreviousWeights.Add(n);
                     }
                     Console.WriteLine($"Node{i}:{node.Value}");
                     column.Add(node);
@@ -306,7 +310,9 @@ namespace BPClassLibrary
                 node.PreviousWeights = new List<double>();
                 for (int k = 0; k < previousNodes.Count; k++)
                 {
-                    node.PreviousWeights.Add((k + 1) * 0.1);
+                    var r = random.NextDouble();
+                    var n = (2 * r - 1) / Math.Sqrt(previousNodes.Count);
+                    node.PreviousWeights.Add(n);
                 }
                 if (targetValues?.Length > i)
                 {
@@ -349,12 +355,12 @@ namespace BPClassLibrary
 
             OutputNodes.ForEach(node => node.ForwardPropagation());
 
-            for (int i = 0; i < OutputNodes.Count; i++)
-            {
-                //Console.WriteLine($"Output{i}:{OutputNodes[i].Value}");
-                log += $"{i}: {OutputNodes[i].Value}\r\n";
-            }
-            log += $"\r\n";
+            //for (int i = 0; i < OutputNodes.Count; i++)
+            //{
+            //    //Console.WriteLine($"Output{i}:{OutputNodes[i].Value}");
+            //    log += $"{i}: {OutputNodes[i].Value}\r\n";
+            //}
+            //log += $"\r\n";
             return log;
         }
 
@@ -373,16 +379,21 @@ namespace BPClassLibrary
             int count = 0;
             while (true)
             {
-                log += ForwardPropagation();
+                ForwardPropagation();
                 BackwardPropagation();
                 bool flag = OutputNodes.All(e => Math.Abs(e.Loss) <= Tolerence);
                 count++;
                 if (count > MaxCount || flag)
                 {
                     //Console.WriteLine($"Training times:{count}");
-                    log += $"Training times:{count}\r\n";
+                    log = $"Training times:{count}\r\n\r\n";
                     break;
                 }
+            }
+            for (int i = 0; i < OutputNodes.Count; i++)
+            {
+                //Console.WriteLine($"Output{i}:{OutputNodes[i].Value}");
+                log += $"{i}: {OutputNodes[i].Value}\r\n";
             }
             return log;
         }
@@ -391,11 +402,11 @@ namespace BPClassLibrary
         {
             string log = string.Empty;
             log += ForwardPropagation();
-            //for (int i = 0; i < OutputNodes.Count; i++)
-            //{
-            //    Console.WriteLine($"Output{i}:{OutputNodes[i].Value}");
-            //    log += $"Output{i}:{OutputNodes[i].Value}\r\n";
-            //}
+            for (int i = 0; i < OutputNodes.Count; i++)
+            {
+                //Console.WriteLine($"Output{i}:{OutputNodes[i].Value}");
+                log += $"Output{i}:{OutputNodes[i].Value}\r\n";
+            }
             return log;
         }
     }

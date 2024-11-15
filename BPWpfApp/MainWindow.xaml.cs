@@ -279,6 +279,7 @@ namespace BPWpfApp
             string directory = System.IO.Path.GetDirectoryName(location);
             string images = System.IO.Path.Combine(directory, "images");
             string[] imagesDirectories = Directory.GetDirectories(images);
+            List<(int N, string Path)> imageList = new List<(int, string)>();
             foreach (var imagesDirectory in imagesDirectories)
             {
                 // 获取文件夹名称
@@ -286,38 +287,11 @@ namespace BPWpfApp
                 bool flag = int.TryParse(folderName, out int n);
                 if (flag && n >= 0 && n <= 9)
                 {
-                    var nStr = n.ToString();
-
-                    tb_TargetOutput_Auto.Dispatcher.Invoke(
-                              new Action<System.Windows.DependencyProperty, object>(tb_TargetOutput_Auto.SetValue),
-                              System.Windows.Threading.DispatcherPriority.Background,
-                              System.Windows.Controls.TextBlock.TextProperty, nStr);
-
-                    string[] imgFiles = Directory.GetFiles(imagesDirectory, "*.png");
+                    string[] imgFiles = Directory.GetFiles(imagesDirectory, "*.jpg");
                     foreach (var img in imgFiles)
                     {
-                        var matrix = ConvertImageToMatrix(img);
-                        var input = matrix.ToArray().Select(e => e).ToArray();
-                        var targetOutput = ToArray(n);
-                        bPFactory.SetInputNodes(input);
-                        bPFactory.SetOutputNodes(targetOutput);
-                        string log = bPFactory.Learn();
-                        tb_Log_Practise_Auto.Dispatcher.Invoke(
-                             new Action<System.Windows.DependencyProperty, object>(tb_Log_Practise_Auto.SetValue),
-                             System.Windows.Threading.DispatcherPriority.Background,
-                             System.Windows.Controls.TextBox.TextProperty, log);
-
-                        var matrixString = MatrixToString(matrix);
-                        tb_Matrix_Practise_Auto.Dispatcher.Invoke(
-                           new Action<System.Windows.DependencyProperty, object>(tb_Matrix_Practise_Auto.SetValue),
-                           System.Windows.Threading.DispatcherPriority.Background,
-                           System.Windows.Controls.TextBlock.TextProperty, matrixString);
-
-                        var image = SetImageSource(img);
-                        images_Practise_Auto.Dispatcher.Invoke(
-                            new Action<System.Windows.DependencyProperty, object>(images_Practise_Auto.SetValue),
-                            System.Windows.Threading.DispatcherPriority.Background,
-                            System.Windows.Controls.Image.SourceProperty, image);
+                        (int N, string Path) image = (n, img);
+                        imageList.Add(image);
                     }
                 }
                 else
@@ -325,11 +299,55 @@ namespace BPWpfApp
                     MessageBox.Show("请输入0-9");
                 }
             }
+
+            var rnd = new Random();
+            var randomizedList = imageList.OrderBy(x => rnd.NextDouble()).ToList();
+            int count = 0;
+            foreach (var item in randomizedList)
+            {
+                var matrix = ConvertImageToMatrix(item.Path);
+                var input = matrix.ToArray().Select(e => e).ToArray();
+                var targetOutput = ToArray(item.N);
+                bPFactory.SetInputNodes(input);
+                bPFactory.SetOutputNodes(targetOutput);
+
+                string log = bPFactory.Learn();
+                log += "\r\n" + count;
+                tb_Log_Practise_Auto.Dispatcher.Invoke(
+                     new Action<System.Windows.DependencyProperty, object>(tb_Log_Practise_Auto.SetValue),
+                     System.Windows.Threading.DispatcherPriority.Background,
+                     System.Windows.Controls.TextBox.TextProperty, log);
+
+                var matrixString = MatrixToString(matrix);
+                tb_Matrix_Practise_Auto.Dispatcher.Invoke(
+                   new Action<System.Windows.DependencyProperty, object>(tb_Matrix_Practise_Auto.SetValue),
+                   System.Windows.Threading.DispatcherPriority.Background,
+                   System.Windows.Controls.TextBlock.TextProperty, matrixString);
+
+                var image = SetImageSource(item.Path);
+                images_Practise_Auto.Dispatcher.Invoke(
+                    new Action<System.Windows.DependencyProperty, object>(images_Practise_Auto.SetValue),
+                    System.Windows.Threading.DispatcherPriority.Background,
+                    System.Windows.Controls.Image.SourceProperty, image);
+
+                var nStr = item.N.ToString();
+                tb_TargetOutput_Auto.Dispatcher.Invoke(
+                          new Action<System.Windows.DependencyProperty, object>(tb_TargetOutput_Auto.SetValue),
+                          System.Windows.Threading.DispatcherPriority.Background,
+                          System.Windows.Controls.TextBlock.TextProperty, nStr);               
+
+                count++;
+                if (count > 1000)
+                {
+                    break;
+                }
+            }
         }
 
         private void Btn_Identify_Practise_Auto_Click(object sender, RoutedEventArgs e)
         {
             Practise();
+            MessageBox.Show("训练完成！");
         }
 
         #endregion 批量训练

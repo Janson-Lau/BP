@@ -33,8 +33,8 @@
                     Background="Black">
                     <InkCanvas.DefaultDrawingAttributes>
                         <DrawingAttributes
-                            Width="40"
-                            Height="40"
+                            Width="30"
+                            Height="30"
                             FitToCurve="True"
                             Color="White" />
                     </InkCanvas.DefaultDrawingAttributes>
@@ -253,8 +253,8 @@
                     Background="Black">
                     <InkCanvas.DefaultDrawingAttributes>
                         <DrawingAttributes
-                            Width="40"
-                            Height="40"
+                            Width="30"
+                            Height="30"
                             FitToCurve="True"
                             Color="White" />
                     </InkCanvas.DefaultDrawingAttributes>
