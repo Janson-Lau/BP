@@ -26,7 +26,15 @@ namespace BPWpfApp
         {
             InitializeComponent();
 
-            bPFactory = new BPFactory(28 * 28, null, 16, 2, 10);
+            if (!File.Exists(BPPath))
+            {
+                bPFactory = new BPFactory(28 * 28, null, 16, 2, 10, null);
+            }
+            else
+            {
+                bPFactory = JsonUtils.JsonToObject<BPFactory>(BPPath);
+                bPFactory.Link(28 * 28);
+            }
         }
 
         #region Common
@@ -211,8 +219,8 @@ namespace BPWpfApp
         /// <returns></returns>
         public double[] ToArray(int n)
         {
-            double[] array = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-            array[n] = 1;
+            double[] array = new double[] { 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001 };
+            array[n] = 0.999;
             return array;
         }
 
@@ -243,6 +251,7 @@ namespace BPWpfApp
             tb_Matrix_Practise.Text = "";
             tb_Log_Practise.Text = "";
             tb_TargetOutput.Text = "";
+            img_Test.Source = null;
         }
 
         private void Btn_Identify_Practise_Click(object sender, RoutedEventArgs e)
@@ -273,12 +282,13 @@ namespace BPWpfApp
 
         public static string AssemblyDirectory => System.IO.Path.GetDirectoryName(CommonAssemblyLocation);
 
+        public static string ImagesDirectory => System.IO.Path.Combine(AssemblyDirectory, "images");
+
+        public static string BPPath => System.IO.Path.Combine(AssemblyDirectory, "BP.json");
+
         public void Practise()
         {
-            string location = Assembly.GetExecutingAssembly().Location;
-            string directory = System.IO.Path.GetDirectoryName(location);
-            string images = System.IO.Path.Combine(directory, "images");
-            string[] imagesDirectories = Directory.GetDirectories(images);
+            string[] imagesDirectories = Directory.GetDirectories(ImagesDirectory);
             List<(int N, string Path)> imageList = new List<(int, string)>();
             foreach (var imagesDirectory in imagesDirectories)
             {
@@ -312,7 +322,7 @@ namespace BPWpfApp
                 bPFactory.SetOutputNodes(targetOutput);
 
                 string log = bPFactory.Learn();
-                log += "\r\n" + count;
+                log += "\r\n训练次数" + count + "\r\n目标值：" + item.N;
                 tb_Log_Practise_Auto.Dispatcher.Invoke(
                      new Action<System.Windows.DependencyProperty, object>(tb_Log_Practise_Auto.SetValue),
                      System.Windows.Threading.DispatcherPriority.Background,
@@ -334,10 +344,11 @@ namespace BPWpfApp
                 tb_TargetOutput_Auto.Dispatcher.Invoke(
                           new Action<System.Windows.DependencyProperty, object>(tb_TargetOutput_Auto.SetValue),
                           System.Windows.Threading.DispatcherPriority.Background,
-                          System.Windows.Controls.TextBlock.TextProperty, nStr);               
+                          System.Windows.Controls.TextBlock.TextProperty, nStr);
 
                 count++;
-                if (count > 1000)
+                //count = randomizedList.IndexOf(item);                
+                if (count > 50)
                 {
                     break;
                 }
@@ -347,7 +358,8 @@ namespace BPWpfApp
         private void Btn_Identify_Practise_Auto_Click(object sender, RoutedEventArgs e)
         {
             Practise();
-            MessageBox.Show("训练完成！");
+            JsonUtils.ObjectToJson(bPFactory, BPPath);
+            MessageBox.Show("训练完成！");      
         }
 
         #endregion 批量训练

@@ -4,7 +4,8 @@
     {
         public static double Sigmoid(double x)
         {
-            return 1 / (1 + Math.Exp(-x));
+            var result = 1 / (1 + Math.Exp(-x));
+            return result;
         }
 
         public static void Sigmoid(double[,] matrix)
