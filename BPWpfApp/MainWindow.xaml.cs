@@ -321,8 +321,10 @@ namespace BPWpfApp
                 bPFactory.SetInputNodes(input);
                 bPFactory.SetOutputNodes(targetOutput);
 
-                string log = bPFactory.Learn();
-                log += "\r\n训练次数" + count + "\r\n目标值：" + item.N;
+                string log = "目标值：" + item.N + "\r\n\r\n";
+                log += bPFactory.Learn();
+                log += "\r\n总训练次数" + count;
+
                 tb_Log_Practise_Auto.Dispatcher.Invoke(
                      new Action<System.Windows.DependencyProperty, object>(tb_Log_Practise_Auto.SetValue),
                      System.Windows.Threading.DispatcherPriority.Background,
@@ -348,10 +350,10 @@ namespace BPWpfApp
 
                 count++;
                 //count = randomizedList.IndexOf(item);                
-                if (count > 50)
-                {
-                    break;
-                }
+                //if (count > 100)
+                //{
+                //    break;
+                //}
             }
         }
 
@@ -359,7 +361,7 @@ namespace BPWpfApp
         {
             Practise();
             JsonUtils.ObjectToJson(bPFactory, BPPath);
-            MessageBox.Show("训练完成！");      
+            MessageBox.Show("训练完成！");
         }
 
         #endregion 批量训练

@@ -33,9 +33,9 @@
                     Background="Black">
                     <InkCanvas.DefaultDrawingAttributes>
                         <DrawingAttributes
-                            Width="30"
-                            Height="30"
-                            FitToCurve="True"
+                            Width="20"
+                            Height="20"
+                            FitToCurve="False"
                             Color="White" />
                     </InkCanvas.DefaultDrawingAttributes>
                 </InkCanvas>
@@ -253,9 +253,9 @@
                     Background="Black">
                     <InkCanvas.DefaultDrawingAttributes>
                         <DrawingAttributes
-                            Width="30"
-                            Height="30"
-                            FitToCurve="True"
+                            Width="20"
+                            Height="20"
+                            FitToCurve="False"
                             Color="White" />
                     </InkCanvas.DefaultDrawingAttributes>
                 </InkCanvas>
