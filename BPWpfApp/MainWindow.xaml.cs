@@ -311,49 +311,59 @@ namespace BPWpfApp
             }
 
             var rnd = new Random();
-            var randomizedList = imageList.OrderBy(x => rnd.NextDouble()).ToList();
-            int count = 0;
-            foreach (var item in randomizedList)
+            var randomizedList = imageList.OrderBy(x => rnd.NextDouble()).ToList();            
+            int totalCount = 0;
+            while (true)
             {
-                var matrix = ConvertImageToMatrix(item.Path);
-                var input = matrix.ToArray().Select(e => e).ToArray();
-                var targetOutput = ToArray(item.N);
-                bPFactory.SetInputNodes(input);
-                bPFactory.SetOutputNodes(targetOutput);
+                int count = 0;
+                totalCount++;
+                foreach (var item in randomizedList)
+                {
+                    var matrix = ConvertImageToMatrix(item.Path);
+                    var input = matrix.ToArray().Select(e => e).ToArray();
+                    var targetOutput = ToArray(item.N);
+                    bPFactory.SetInputNodes(input);
+                    bPFactory.SetOutputNodes(targetOutput);
 
-                string log = "目标值：" + item.N + "\r\n\r\n";
-                log += bPFactory.Learn();
-                log += "\r\n总训练次数" + count;
+                    string log = "目标值：" + item.N + "\r\n\r\n";
+                    log += bPFactory.Learn();
+                    log += "\r\n总训练次数" + count;
+                    log += $"\r\n第{totalCount}遍训练";
 
-                tb_Log_Practise_Auto.Dispatcher.Invoke(
-                     new Action<System.Windows.DependencyProperty, object>(tb_Log_Practise_Auto.SetValue),
-                     System.Windows.Threading.DispatcherPriority.Background,
-                     System.Windows.Controls.TextBox.TextProperty, log);
+                    tb_Log_Practise_Auto.Dispatcher.Invoke(
+                         new Action<System.Windows.DependencyProperty, object>(tb_Log_Practise_Auto.SetValue),
+                         System.Windows.Threading.DispatcherPriority.Background,
+                         System.Windows.Controls.TextBox.TextProperty, log);
 
-                var matrixString = MatrixToString(matrix);
-                tb_Matrix_Practise_Auto.Dispatcher.Invoke(
-                   new Action<System.Windows.DependencyProperty, object>(tb_Matrix_Practise_Auto.SetValue),
-                   System.Windows.Threading.DispatcherPriority.Background,
-                   System.Windows.Controls.TextBlock.TextProperty, matrixString);
+                    var matrixString = MatrixToString(matrix);
+                    tb_Matrix_Practise_Auto.Dispatcher.Invoke(
+                       new Action<System.Windows.DependencyProperty, object>(tb_Matrix_Practise_Auto.SetValue),
+                       System.Windows.Threading.DispatcherPriority.Background,
+                       System.Windows.Controls.TextBlock.TextProperty, matrixString);
 
-                var image = SetImageSource(item.Path);
-                images_Practise_Auto.Dispatcher.Invoke(
-                    new Action<System.Windows.DependencyProperty, object>(images_Practise_Auto.SetValue),
-                    System.Windows.Threading.DispatcherPriority.Background,
-                    System.Windows.Controls.Image.SourceProperty, image);
+                    var image = SetImageSource(item.Path);
+                    images_Practise_Auto.Dispatcher.Invoke(
+                        new Action<System.Windows.DependencyProperty, object>(images_Practise_Auto.SetValue),
+                        System.Windows.Threading.DispatcherPriority.Background,
+                        System.Windows.Controls.Image.SourceProperty, image);
 
-                var nStr = item.N.ToString();
-                tb_TargetOutput_Auto.Dispatcher.Invoke(
-                          new Action<System.Windows.DependencyProperty, object>(tb_TargetOutput_Auto.SetValue),
-                          System.Windows.Threading.DispatcherPriority.Background,
-                          System.Windows.Controls.TextBlock.TextProperty, nStr);
+                    var nStr = item.N.ToString();
+                    tb_TargetOutput_Auto.Dispatcher.Invoke(
+                              new Action<System.Windows.DependencyProperty, object>(tb_TargetOutput_Auto.SetValue),
+                              System.Windows.Threading.DispatcherPriority.Background,
+                              System.Windows.Controls.TextBlock.TextProperty, nStr);
 
-                count++;
-                //count = randomizedList.IndexOf(item);                
-                //if (count > 100)
-                //{
-                //    break;
-                //}
+                    count++;
+                    //count = randomizedList.IndexOf(item);                
+                    //if (count > 100)
+                    //{
+                    //    break;
+                    //}
+                }
+                if (totalCount > 1)
+                {
+                    break;
+                }
             }
         }
 

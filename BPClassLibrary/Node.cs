@@ -678,7 +678,7 @@ namespace BPClassLibrary
         /// <summary>
         /// 最大迭代次数
         /// </summary>
-        public int MaxCount { get; set; } = 5;
+        public int MaxCount { get; set; } = 50;
 
         /// <summary>
         /// 目标容差
@@ -948,7 +948,7 @@ namespace BPClassLibrary
                 ForwardPropagation();
                 bool flag = OutputNodes.All(e => Math.Abs(e.TargetValue - e.Value) <= Tolerence);
                 count++;
-                if (count > MaxCount || flag)
+                if (count > 50 || flag)
                 {
                     //Console.WriteLine($"计算迭代次数:{count}");                    
                     break;
